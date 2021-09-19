@@ -39,18 +39,21 @@ class SecurityController extends AbstractController
         if (!isset(
             $data->username,
             $data->password,
-        )) return new JsonResponse('form invalid', 500);
+        )) return $this->globals->error('form invalid');
 
         $user = $this->userRepo->findOneBy(['username' => $data->username]);
-        if (!$user) return new JsonResponse('username not found', 500);
+        if (!$user) $this->globals->error('username not found');
 
         if (!$encoder->isPasswordValid($user, $data->password))
-            return new JsonResponse('password invalid', 500);
+            return $this->globals->error('password invalid');
 
-        return new JsonResponse([
-            'username' => $user->getUsername(),
-            'token' => $token->create($user)
-        ]);
+        return $this->globals->success(
+            'success',
+            [
+                'username' => $user->getUsername(),
+                'token' => $token->create($user)
+            ]
+        );
     }
 
     /**
@@ -67,7 +70,12 @@ class SecurityController extends AbstractController
             $data->lastname,
             $data->password,
             $data->fk_pays
-        )) return new JsonResponse('error', 500);
+        )) return $this->globals->error('form invalid');
+
+        if ($this->userRepo->findOneBy(['username' => $data->username]) !== null)
+            return $this->globals->error('username already exist');
+        if (strlen($data->password) < 4)
+            return $this->globals->error('password too short');
 
         $fk_pays = $this->paysRepo->findOneBy(['id' => $data->fk_pays, 'active' => true]);
 
@@ -84,6 +92,6 @@ class SecurityController extends AbstractController
         $em = $this->getDoctrine()->getManager();
         $em->persist($user);
         $em->flush();
-        return new JsonResponse('register succesfull !');
+        return $this->globals->success('register done!', $user->tojson());
     }
 }
