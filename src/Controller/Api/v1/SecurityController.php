@@ -7,6 +7,7 @@ namespace App\Controller\Api\v1;
 use App\Entity\TUser;
 use App\Repository\TPaysRepository;
 use App\Repository\TUserRepository;
+use App\Shared\ErrorHttp;
 use App\Shared\Globals;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -39,21 +40,18 @@ class SecurityController extends AbstractController
         if (!isset(
             $data->username,
             $data->password,
-        )) return $this->globals->error('form invalid');
+        )) return $this->globals->error(ErrorHttp::FORM_INVALID);
 
         $user = $this->userRepo->findOneBy(['username' => $data->username]);
-        if (!$user) $this->globals->error('username not found');
+        if (!$user) $this->globals->error(ErrorHttp::USERNAME_NOT_FOUND);
 
         if (!$encoder->isPasswordValid($user, $data->password))
-            return $this->globals->error('password invalid');
+            return $this->globals->error(ErrorHttp::PASSWORD_INVALID);
 
-        return $this->globals->success(
-            'success',
-            [
-                'username' => $user->getUsername(),
-                'token' => $token->create($user)
-            ]
-        );
+        return $this->globals->success([
+            'username' => $user->getUsername(),
+            'token' => $token->create($user)
+        ]);
     }
 
     /**
@@ -70,14 +68,16 @@ class SecurityController extends AbstractController
             $data->lastname,
             $data->password,
             $data->fk_pays
-        )) return $this->globals->error('form invalid');
+        )) return $this->globals->error(ErrorHttp::FORM_INVALID);
 
         if ($this->userRepo->findOneBy(['username' => $data->username]) !== null)
-            return $this->globals->error('username already exist');
+            return $this->globals->error(ErrorHttp::USERNAME_EXIST);
         if (strlen($data->password) < 4)
-            return $this->globals->error('password too short');
+            return $this->globals->error(ErrorHttp::PASSWORD_TOO_SHORT);
 
         $fk_pays = $this->paysRepo->findOneBy(['id' => $data->fk_pays, 'active' => true]);
+        if (!$fk_pays)
+            return $this->globals->error(ErrorHttp::PAYS_NOT_FOUND);
 
         $user = (new TUser())
             ->setActive(true)
@@ -92,6 +92,6 @@ class SecurityController extends AbstractController
         $em = $this->getDoctrine()->getManager();
         $em->persist($user);
         $em->flush();
-        return $this->globals->success('register done!', $user->tojson());
+        return $this->globals->success($user->tojson());
     }
 }

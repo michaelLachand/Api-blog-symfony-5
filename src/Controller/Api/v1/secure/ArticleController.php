@@ -4,6 +4,7 @@
 namespace App\Controller\Api\v1\secure;
 
 
+use App\Shared\Globals;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,14 +18,19 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class ArticleController extends AbstractController
 {
+    public Globals $globals;
+
+    public function __construct(Globals $globals)
+    {
+        $this->globals = $globals;
+    }
+
     /**
      * @Route("articles", name="article")
      * @return JsonResponse
      */
     public function articles(): JsonResponse
     {
-        return new JsonResponse([
-            'articles' => []
-        ]);
+        return $this->globals->success(['articles' => []]);
     }
 }
