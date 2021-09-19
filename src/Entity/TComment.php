@@ -36,6 +36,18 @@ class TComment
      */
     private ?TArticle $fk_article = null;
 
+    public function tojson(): array
+    {
+        return [
+            'date_save' => $this->date_save ? $this->date_save->format('c') : null,
+            'active' => $this->active,
+            'id' => $this->id,
+            'comment' => $this->comment,
+            'fk_user' => $this->fk_user ? $this->fk_user->tojson() : null,
+            'fk_article' => $this->fk_article ? $this->fk_article->tojson() : null,
+        ];
+    }
+
     public function getId(): ?int
     {
         return $this->id;

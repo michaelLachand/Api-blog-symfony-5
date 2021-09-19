@@ -82,6 +82,20 @@ class TUser implements UserInterface, Serializable
         $this->tComments = new ArrayCollection();
     }
 
+    public function tojson(): array
+    {
+        return [
+            'date_save' => $this->date_save ? $this->date_save->format('c') : null,
+            'active' => $this->active,
+            'id' => $this->id,
+            'username' => $this->username,
+            'firstname' => $this->firstname,
+            'lastname' => $this->lastname,
+            'naissance' => $this->naissance ? $this->naissance->format('c') : null,
+            'roles' => $this->roles
+        ];
+    }
+
     public function getId(): ?int
     {
         return $this->id;

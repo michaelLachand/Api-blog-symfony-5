@@ -43,6 +43,17 @@ class TPays
         $this->tUsers = new ArrayCollection();
     }
 
+    public function tojson(): array
+    {
+        return [
+            'date_save' => $this->date_save ? $this->date_save->format('c') : null,
+            'active' => $this->active,
+            'id' => $this->id,
+            'nom' => $this->nom,
+            'description' => $this->description,
+        ];
+    }
+
     public function getId(): ?int
     {
         return $this->id;

@@ -53,6 +53,19 @@ class TArticle
         $this->tComments = new ArrayCollection();
     }
 
+    public function tojson(): array
+    {
+        return [
+            'date_save' => $this->date_save ? $this->date_save->format('c') : null,
+            'active' => $this->active,
+            'id' => $this->id,
+            'title' => $this->title,
+            'description' => $this->description,
+            'fk_user' => $this->fk_user ? $this->fk_user->tojson() : null,
+            'fk_categorie' => $this->fk_categories ? $this->fk_categories->tojson() : null,
+        ];
+    }
+
     public function getId(): ?int
     {
         return $this->id;
