@@ -10,8 +10,10 @@ use App\Repository\TUserRepository;
 use App\Shared\ErrorHttp;
 use App\Shared\Globals;
 use Lexik\Bundle\JWTAuthenticationBundle\Services\JWTTokenManagerInterface;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
@@ -43,7 +45,7 @@ class SecurityController extends AbstractController
         )) return $this->globals->error(ErrorHttp::FORM_INVALID);
 
         $user = $this->userRepo->findOneBy(['username' => $data->username]);
-        if (!$user) $this->globals->error(ErrorHttp::USERNAME_NOT_FOUND);
+        if (!$user) return $this->globals->error(ErrorHttp::USERNAME_NOT_FOUND);
 
         if (!$encoder->isPasswordValid($user, $data->password))
             return $this->globals->error(ErrorHttp::PASSWORD_INVALID);
@@ -85,7 +87,7 @@ class SecurityController extends AbstractController
             ->setFirstname($data->firstname)
             ->setLastname($data->lastname)
             ->setFkPays($fk_pays)
-            ->setRoles(['ROLE_AUTHOR']);
+            ->setRoles(['ROLE_VISITEUR']);
 
         $user->setPassword($encoder->encodePassword($user, $data->password));
 
@@ -93,5 +95,52 @@ class SecurityController extends AbstractController
         $em->persist($user);
         $em->flush();
         return $this->globals->success($user->tojson());
+    }
+
+    /**
+     * @Route("/token", name="")
+     * @Template("/security/token.html.twig")
+     */
+    public function token(Request $request)
+    {
+        $token = $request->query->get('token');
+        if (!$token)
+            return $this->globals->error(ErrorHttp::TOKEN_NOT_FOUND);
+
+        $user = $this->userRepo->findOneBy(['active' => true, 'password_token' => $token]);
+        if (!$user)
+            return $this->globals->error(ErrorHttp::USER_NOT_FOUND);
+
+        return [
+            'user' => $user
+        ];
+    }
+
+    /**
+     * @Route("/changepasswordbytoken", name="changepasswordbytoken")
+     * @return JsonResponse
+     */
+    public function changePasswordByToken(): JsonResponse
+    {
+        $data = $this->globals->jsondecode();
+        if (!isset($data->token, $data->password, $data->password_repeat))
+            return $this->globals->error(ErrorHttp::FORM_INVALID);
+
+        $user = $this->userRepo->findOneBy(['password_token' => $data->token, 'active' => true]);
+        if (!$user)
+            return $this->globals->error(ErrorHttp::USER_NOT_FOUND);
+
+        if ($data->password !== $data->password_repeat)
+            return $this->globals->error(ErrorHttp::PASSWORD_NOT_MATCH);
+        if (strlen($data->password) < 4)
+            return $this->globals->error(ErrorHttp::PASSWORD_TOO_SHORT);
+
+        $user->setPassword($this->globals->encoder()->encodePassword($user, $data->password))
+            ->setPasswordToChange(false)
+            ->setPasswordToken(null);
+
+        $this->getDoctrine()->getManager()->persist($user);
+        $this->getDoctrine()->getManager()->flush();
+        return $this->globals->success();
     }
 }
