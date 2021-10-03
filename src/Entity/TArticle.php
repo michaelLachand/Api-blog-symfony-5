@@ -7,6 +7,7 @@ use App\Repository\TArticleRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @ORM\Entity(repositoryClass=TArticleRepository::class)
@@ -100,6 +101,10 @@ class TArticle
         return $this->fk_user;
     }
 
+    /**
+     * @param TUser|null|UserInterface $fk_user
+     * @return $this
+     */
     public function setFkUser(?TUser $fk_user): self
     {
         $this->fk_user = $fk_user;
