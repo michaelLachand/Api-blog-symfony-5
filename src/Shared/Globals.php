@@ -6,9 +6,16 @@ namespace App\Shared;
 
 use PHPUnit\Exception;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class Globals
 {
+    private UserPasswordEncoderInterface $encoder;
+    public function __construct(UserPasswordEncoderInterface $encoder)
+    {
+        $this->encoder = $encoder;
+    }
+
     public function jsondecode()
     {
         try {
@@ -17,6 +24,11 @@ class Globals
         } catch (Exception $e){
             return [];
         }
+    }
+
+    public function encoder(): UserPasswordEncoderInterface
+    {
+        return $this->encoder;
     }
 
     public function success(array $data = null, string $message = 'success'): JsonResponse
