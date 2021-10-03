@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div>
+    <form method="post" id="form">
+        <h2>Changement de mot de passe</h2>
+        <hr>
+        <input id="token" value="{{ user.passwordToken }}" type="hidden" readonly aria-label="">
+        <input value="{{ user.username }}" type="text" style="display: block;" readonly aria-label="">
+        <input value="{{ user.firstname }}" type="text" style="display: block;" readonly aria-label="">
+        <input value="{{ user.lastname }}" type="text" style="display: block;" readonly aria-label="">
+        <input id="password" type="password" style="display: block;" aria-label="">
+        <input id="password-repreat" type="password" style="display: block;" aria-label="">
+        <br>
+        <button id="button" style="display: block; background-color: darkblue; color: white;">Modifier le mot de passe</button>
+    </form>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        $(function () {
+            console.log('page load...');
+            let form = $('#form'), button = $('#button'), token = $('#token'), password = $('#password'), passwordRepeat = $('#password-repreat');
+
+            form.on('submit', function (e){
+                e.preventDefault();
+                savePassword();
+            });
+
+            button.on('click', function (e){
+                e.preventDefault();
+                savePassword();
+            });
+
+            function savePassword()
+            {
+                let data = JSON.stringify({
+                    token: token.val(),
+                    password: password.val(),
+                    password_repeat: passwordRepeat.val(),
+                });
+                console.log(data);
+                $.post("{{ path('changepasswordbytoken') }}", data, function(res) {
+                    console.log(res);
+                    alert('Mot de passe modifié avec succés!');
+                });
+            }
+        })
+    </script>
+{% endblock %}
